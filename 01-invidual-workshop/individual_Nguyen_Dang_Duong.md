@@ -1,26 +1,5 @@
 # App Teardown — V-App / V-AI
 
-## 0. Thông tin chung
-
-**Product:** V-App  
-**AI feature:** V-AI  
-**Task được test:**  
-> Ví dụ: Hỏi V-AI về một tác vụ trong app, như tìm tính năng, hướng dẫn thao tác, gợi ý theo ngữ cảnh.
-
-**User persona:**  
-> Ví dụ: Người dùng mới, chưa quen flow trong V-App.
-
-**Product promise:**  
-> V-AI hứa sẽ giúp user bằng cách: ...
-
-**Evidence đã thu thập:**
-- Screenshot: `...`
-- Prompt/input đã thử: `...`
-- Hành vi quan sát được: `...`
-- Quote từ app nếu có: `...`
-
----
-
 # 1. Four Paths Overview
 
 | Path | Test prompt | AI response hiện tại | Evidence |  
@@ -40,3 +19,48 @@ User nhập:
 
 ```text
 ...
+```
+
+---
+
+# 4. Finding (product decision)
+
+Khi user yêu cầu V-AI không đưa ra các gợi ý tiếp theo sau mỗi phản hồi, V-AI có ghi nhận yêu cầu nhưng không thật sự thay đổi hành vi ở các lượt hỏi sau.
+
+AI/product failure: V-AI vẫn tiếp tục hiển thị các gợi ý tiếp theo dù user đã nói rõ rằng các gợi ý đó gây rối thông tin và không muốn thấy nữa.
+
+Impact: User mất cảm giác kiểm soát cuộc hội thoại, phải nhắc lại cùng một yêu cầu nhiều lần, và trải nghiệm hỏi đáp trở nên kém tin cậy vì AI xác nhận đã hiểu nhưng không làm đúng.
+
+Layer lỗi: UX Recovery + Memory/Instruction Following.
+
+Product decision: V-AI cần có cơ chế ghi nhớ preference trong session hiện tại. Khi user yêu cầu tắt hoặc giảm một kiểu phản hồi, ví dụ không hiển thị suggestion chips/gợi ý tiếp theo, hệ thống phải áp dụng ngay cho các lượt sau trong cùng cuộc hội thoại.
+
+Requirement đề xuất: Nếu user nói các câu như "đừng đưa ra gợi ý tiếp theo", "không cần gợi ý nữa", hoặc "các gợi ý này gây rối", V-AI phải:
+
+- Xác nhận đã thay đổi cách phản hồi.
+- Không hiển thị suggestion chips trong các câu trả lời tiếp theo của session hiện tại.
+- Chỉ bật lại khi user yêu cầu hoặc bắt đầu session mới.
+- Có test case kiểm tra rằng preference này được giữ qua ít nhất 2-3 lượt hội thoại tiếp theo.
+
+---
+
+# 5. Sketch as-is / to-be
+
+| As-is | To-be |
+|---|---|
+| User yêu cầu: "Tôi không muốn bạn đưa ra các gợi ý tiếp theo sau mỗi phản hồi nữa." | User yêu cầu: "Tôi không muốn bạn đưa ra các gợi ý tiếp theo sau mỗi phản hồi nữa." |
+| V-AI trả lời theo hướng đã ghi nhận yêu cầu của user. | V-AI xác nhận rõ: từ các lượt sau trong session này sẽ không hiển thị gợi ý tiếp theo. |
+| User hỏi tiếp: "Hướng dẫn mua xe VF9." | User hỏi tiếp: "Hướng dẫn mua xe VF9." |
+| V-AI trả lời nội dung hướng dẫn nhưng vẫn hiển thị các gợi ý tiếp theo. | V-AI chỉ trả lời trực tiếp nội dung hướng dẫn mua VF9, không hiển thị suggestion chips/gợi ý tiếp theo. |
+| User phát hiện AI không làm đúng điều đã xác nhận, phải correction lại. | User không cần nhắc lại yêu cầu, vì preference đã được áp dụng trong session. |
+| Điểm gãy: AI hiểu câu correction ở mức ngôn ngữ nhưng không chuyển thành thay đổi hành vi của UI/response. | Path đã sửa: correction của user được lưu tạm trong session và ảnh hưởng trực tiếp tới cách V-AI phản hồi. |
+
+---
+
+# 6. Tự kiểm trước khi nộp
+
+- [x] Có ít nhất 1 screenshot hoặc observation cụ thể.
+- [x] Có đủ 4 paths: Happy, Low-confidence, Failure, Correction đều đã được test với prompt cụ thể và có evidence screenshot đi kèm.
+- [x] Finding được viết thành product decision, không chỉ là nhận xét.
+- [x] Sketch có as-is và to-be.
+- [x] Có một câu nói rõ finding này sẽ đổi gì trong SPEC: SPEC cần bổ sung requirement để V-AI ghi nhớ preference của user trong session hiện tại, đặc biệt với yêu cầu không hiển thị gợi ý tiếp theo.
